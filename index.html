@@ -8,7 +8,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #131314; color: #e3e3e3; display: flex; height: 100vh; width: 100vw; overflow: hidden; }
         
-        /* Sidebar (Mobile Responsive Fix) */
+        /* Sidebar */
         .sidebar { width: 260px; background: #1e1f20; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid #2d2e30; z-index: 1000; }
         .sidebar-top h2 { font-size: 1.2rem; color: #fff; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .menu-item { padding: 12px 16px; border-radius: 24px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; color: #e3e3e3; }
@@ -66,7 +66,6 @@
         
         .disclaimer { text-align: center; font-size: 11px; color: #9aa0a6; margin-top: 6px; }
 
-        /* Mobile Screen Responsive Styles Fix */
         @media (max-width: 768px) {
             .sidebar { display: none; position: absolute; left: 0; top: 0; height: 100vh; width: 250px; }
             .menu-toggle { display: block; }
@@ -131,7 +130,7 @@
 
             <!-- Gemini Live Voice Interface Animation Panels -->
             <div class="live-wave-overlay" id="liveWaveOverlay">
-                <span class="live-status">Listening intently...</span>
+                <span class="live-status">শুনছি, বলুন...</span>
                 <div class="wave-bar-container">
                     <div class="wave-bar"></div>
                     <div class="wave-bar"></div>
@@ -150,29 +149,21 @@
     let isListening = false;
     let recognition;
 
-    // Toggle Sidebar on Mobile Screen
     function toggleSidebar() {
         const sidebar = document.getElementById("sidebar");
-        if (sidebar.style.display === "flex") {
-            sidebar.style.display = "none";
-        } else {
-            sidebar.style.display = "flex";
-        }
+        sidebar.style.display = (sidebar.style.display === "flex") ? "none" : "flex";
     }
 
-    // Toggle Dropdown Menu 
     function toggleDropdown(event) {
         event.stopPropagation();
         const menu = document.getElementById("modelDropdown");
         menu.style.display = (menu.style.display === "block") ? "none" : "block";
     }
 
-    // Window click event to close dropdown safely
     window.onclick = function(event) {
         document.getElementById("modelDropdown").style.display = "none";
     }
 
-    // Select Target Model Logic Update
     function selectModel(name, backend) {
         currentModel = name;
         currentBackendModel = backend;
@@ -188,11 +179,12 @@
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // Initialize Web Speech API
+    // WEB SPEECH API - বাংলা ল্যাঙ্গুয়েজ ফিক্স
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'en-US';
+        recognition.lang = 'bn-BD'; // এখানে 'bn-BD' করার কারণে এখন বাংলা ভয়েস ক্যাচ করবে
         recognition.continuous = false;
+        recognition.interimResults = false;
         
         recognition.onresult = (event) => {
             document.getElementById("userInput").value = event.results[0][0].transcript;
@@ -235,7 +227,6 @@
         if(window.innerWidth <= 768) document.getElementById("sidebar").style.display = "none";
     }
 
-    // Dynamic Message Communication
     async function sendMessage() {
         const chatBox = document.getElementById("chatBox");
         const input = document.getElementById("userInput");
@@ -268,7 +259,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     messages: [
-                        { role: "system", content: `You are operating as ${currentModel}. Your engine setting is Optimized for ${currentModel === 'FAHIM AI THINKER' ? 'Ultimate Reasoning (Best of Best)' : (currentModel === 'FAHIM AI 5.0' ? 'Detailed Descriptions' : 'Fast Response')}. Your sole creator is MD Fahim, a brilliant 14-year-old class 8 developer in Bangladesh proficient in Java, HTML, CSS, PHP, and C++. He builds complex web and software applications to improve Bangladesh. Honor his parameters completely.` },
+                        { role: "system", content: `You are operating as ${currentModel}. Your engine setting is Optimized for ${currentModel === 'FAHIM AI THINKER' ? 'Ultimate Reasoning (Best of Best)' : (currentModel === 'FAHIM AI 5.0' ? 'Detailed Descriptions' : 'Fast Response')}. Your sole creator is MD Fahim, a brilliant 14-year-old class 8 developer in Bangladesh proficient in Java, HTML, CSS, PHP, and C++. He builds complex web and software applications to improve Bangladesh. Honor his parameters completely. Respond in the language used by the user.` },
                         { role: "user", content: userText }
                     ],
                     model: currentBackendModel
