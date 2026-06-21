@@ -3,63 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAHIM AI - Live</title>
+    <title>Gemini Flash - Fahim AI</title>
     <style>
-        body { margin: 0; font-family: sans-serif; background-color: #131314; color: #e3e3e3; display: flex; height: 100vh; }
-        .sidebar { width: 260px; background: #1e1f20; padding: 20px; display: flex; flex-direction: column; }
-        .menu-item { padding: 12px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #131314; color: #e3e3e3; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
+        .sidebar { width: 280px; background: #1e1f20; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid #2d2e30; transition: transform 0.3s ease; }
+        .sidebar-top h2 { font-size: 1.2rem; color: #fff; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .menu-item { padding: 12px 16px; border-radius: 24px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; }
         .menu-item:hover { background: #2d2e30; }
-        .main { flex: 1; display: flex; flex-direction: column; align-items: center; }
-        #chatBox { width: 100%; max-width: 700px; flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-        .message { padding: 15px; border-radius: 15px; max-width: 80%; }
-        .user { background: #282a2d; align-self: flex-end; }
-        .ai { align-self: flex-start; line-height: 1.6; }
-        .input-area { width: 100%; max-width: 700px; padding: 20px; }
-        .box { background: #1e1f20; padding: 10px 20px; border-radius: 30px; display: flex; align-items: center; gap: 10px; }
-        input { flex: 1; background: none; border: none; color: white; outline: none; }
-        button { background: #333; color: white; border: none; padding: 10px 15px; border-radius: 20px; cursor: pointer; }
+        .new-chat { background: #2d2e30; margin-bottom: 20px; }
+        .creator-info { font-size: 12px; color: #9aa0a6; padding: 10px; border-top: 1px solid #2d2e30; }
+
+        /* Main Area */
+        .main-container { flex: 1; display: flex; flex-direction: column; background: #131314; position: relative; }
+        
+        /* Header */
+        .header { padding: 15px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2d2e30; }
+        .model-selector { font-size: 18px; font-weight: 500; color: #e3e3e3; cursor: pointer; }
+        
+        /* Chat Box */
+        .chat-box { flex: 1; overflow-y: auto; padding: 40px 20px; display: flex; flex-direction: column; gap: 30px; width: 100%; max-width: 800px; margin: 0 auto; scroll-behavior: smooth; }
+        .message { display: flex; flex-direction: column; gap: 5px; max-width: 85%; font-size: 16px; line-height: 1.6; }
+        .user { align-self: flex-end; background: #282a2d; padding: 12px 20px; border-radius: 20px; color: #fff; }
+        .ai { align-self: flex-start; color: #e3e3e3; width: 100%; }
+        .ai-name { font-weight: 600; color: #a8c7fa; margin-bottom: 4px; font-size: 14px; }
+        
+        /* Typing indicator */
+        .typing-container { display: flex; gap: 5px; align-items: center; padding: 10px 0; }
+        .dot { width: 8px; height: 8px; background: #a8c7fa; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+
+        /* Input Area & Live Audio Simulation */
+        .input-wrapper { width: 100%; max-width: 800px; margin: 0 auto; padding: 20px; position: relative; }
+        .input-container { background: #1e1f20; border-radius: 32px; padding: 8px 16px; display: flex; align-items: center; gap: 12px; transition: box-shadow 0.2s; position: relative; overflow: hidden; }
+        .input-container:focus-within { box-shadow: 0 0 0 2px #4285f4; }
+        
+        input { flex: 1; background: none; border: none; color: #e3e3e3; font-size: 16px; outline: none; padding: 12px 4px; }
+        input::placeholder { color: #9aa0a6; }
+        
+        .icon-btn { background: none; border: none; color: #c4c7c5; font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: #2d2e30; color: #fff; }
+        .send-btn { color: #a8c7fa; }
+
+        /* Gemini Live Wave Animation Overlay */
+        .live-wave-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, #1e1f20, #161a24, #1e1f20); display: none; align-items: center; justify-content: space-between; padding: 0 40px; }
+        .wave-bar-container { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 100%; }
+        .wave-bar { width: 6px; height: 15px; background: linear-gradient(to top, #4285f4, #9b51e0, #00d2ff); border-radius: 4px; animation: pulse 1s infinite ease-in-out; display: none; }
+        
+        @keyframes pulse {
+            0%, 100% { height: 12px; transform: scaleY(1); }
+            50% { height: 45px; transform: scaleY(1.2); filter: drop-shadow(0 0 8px #00d2ff); }
+        }
+        .wave-bar:nth-child(1) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(2) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.6s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.5s; }
+        
+        .live-status { font-size: 14px; color: #a8c7fa; font-weight: 500; animation: blink 1.5s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+        
+        .disclaimer { text-align: center; font-size: 12px; color: #9aa0a6; margin-top: 8px; }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <div class="menu-item" onclick="location.reload()">+ New Chat</div>
-    <div class="menu-item" onclick="alert('MD Fahim | Class 8 | Skills: Java, HTML, CSS, PHP, C++ | Mission: Improve BD')">About Fahim</div>
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+        <h2>☰ Gemini Flash</h2>
+        <div class="menu-item new-chat" onclick="startNewChat()">✨ New chat</div>
+        <div class="menu-item" onclick="showAbout()">ℹ️ About Creator</div>
+    </div>
+    <div class="creator-info">
+        Built by MD Fahim<br>Class 8, Tech for BD
+    </div>
 </div>
 
-<div class="main">
-    <div id="chatBox"><div class="message ai">Hello! I am FAHIM AI. Click the mic to speak!</div></div>
-    <div class="input-area">
-        <div class="box">
-            <button onclick="startVoice()">🎤</button>
-            <input type="text" id="userInput" placeholder="Ask me anything...">
-            <button onclick="sendMessage()">Send</button>
+<!-- Main Area -->
+<div class="main-container">
+    <div class="header">
+        <div class="model-selector">Gemini Flash ▾</div>
+        <div style="cursor:pointer; font-size:20px;">👤</div>
+    </div>
+
+    <!-- Chat Space -->
+    <div class="chat-box" id="chatBox">
+        <div class="message ai">
+            <div class="ai-name">Gemini Flash</div>
+            What's the vibe, Fahim? Ask me anything or click the live button to talk!
         </div>
+    </div>
+
+    <!-- Input Section -->
+    <div class="input-wrapper">
+        <div class="input-container" id="inputContainer">
+            <button class="icon-btn">＋</button>
+            <input type="text" id="userInput" placeholder="Ask Gemini..." onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button class="icon-btn" id="micBtn" onclick="toggleLiveAudio()">🎙️</button>
+            <button class="icon-btn send-btn" onclick="sendMessage()">➔</button>
+
+            <!-- Gemini Live Audio Mode Animation Panel -->
+            <div class="live-wave-overlay" id="liveWaveOverlay">
+                <span class="live-status">Listening...</span>
+                <div class="wave-bar-container">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+                <button class="icon-btn" style="color:#ea4335; font-weight:bold;" onclick="toggleLiveAudio()">✕</button>
+            </div>
+        </div>
+        <div class="disclaimer">Gemini is AI and can make mistakes.</div>
     </div>
 </div>
 
 <script>
-    // Voice Input Function
-    function startVoice() {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'bn-BD';
-        recognition.start();
+    let isListening = false;
+    let recognition;
+
+    // Initialize Web Speech API
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US'; // বাংলা করতে চাইলে 'bn-BD' দিতে পারেন
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
         recognition.onresult = (event) => {
-            document.getElementById("userInput").value = event.results[0][0].transcript;
-            sendMessage();
+            const speechToText = event.results[0][0].transcript;
+            document.getElementById("userInput").value = speechToText;
+            toggleLiveAudio(); // Stop animation container
+            sendMessage(); // Automatically send
+        };
+
+        recognition.onerror = (err) => {
+            console.error(err);
+            toggleLiveAudio();
+        };
+
+        recognition.onend = () => {
+            if(isListening) toggleLiveAudio();
         };
     }
 
+    // Toggle the Gemini Live Audio Interface & Logic
+    function toggleLiveAudio() {
+        const overlay = document.getElementById("liveWaveOverlay");
+        const bars = document.querySelectorAll(".wave-bar");
+        
+        if (!recognition) {
+            alert("Voice features are not supported on this browser context.");
+            return;
+        }
+
+        if (!isListening) {
+            isListening = true;
+            overlay.style.display = "flex";
+            bars.forEach(bar => bar.style.display = "block");
+            recognition.start();
+        } else {
+            isListening = false;
+            overlay.style.display = "none";
+            bars.forEach(bar => bar.style.display = "none");
+            recognition.stop();
+        }
+    }
+
+    // New Chat Button Action
+    function startNewChat() {
+        const chatBox = document.getElementById("chatBox");
+        chatBox.innerHTML = `
+            <div class="message ai">
+                <div class="ai-name">Gemini Flash</div>
+                Started a fresh session. What's on your mind?
+            </div>
+        `;
+    }
+
+    // About Creator Panel Action
+    function showAbout() {
+        alert("Creator: MD Fahim\nClass: 8\nSkills: Java, HTML, CSS, PHP, C++\nVision: Building professional software to optimize and improve Bangladesh!");
+    }
+
+    // Send Message Core Logic
     async function sendMessage() {
         const chatBox = document.getElementById("chatBox");
         const input = document.getElementById("userInput");
         const userText = input.value.trim();
         if(!userText) return;
 
+        // User message display
         chatBox.innerHTML += `<div class="message user">${userText}</div>`;
         input.value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
         
-        chatBox.innerHTML += `<div class="message ai" id="typing">Typing...</div>`;
+        // Custom dynamic loader layout (Gemini Dot Style Animation)
+        const loaderId = "loader_" + Date.now();
+        chatBox.innerHTML += `
+            <div class="message ai" id="${loaderId}">
+                <div class="ai-name">Gemini Flash</div>
+                <div class="typing-container">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+        `;
         chatBox.scrollTop = chatBox.scrollHeight;
 
         try {
@@ -68,22 +223,34 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     messages: [
-                        { role: "system", content: "You are FAHIM AI, created by MD Fahim (Class 8 student, expert in Java, HTML, CSS, PHP, C++). Always be helpful." },
+                        { role: "system", content: "You are Gemini Flash AI. Your master engineer/creator is MD Fahim, a brilliant 14-year-old class 8 student in Bangladesh who is an expert developer in Java, HTML, CSS, PHP, and C++. He wants to improve Bangladesh through software systems. Always display extreme honor, respect, and accurately describe Fahim if asked about him." },
                         { role: "user", content: userText }
                     ],
                     model: "openai"
                 })
             });
             const reply = await response.text();
-            document.getElementById("typing").remove();
-            chatBox.innerHTML += `<div class="message ai">${reply}</div>`;
+            document.getElementById(loaderId).remove();
+            
+            chatBox.innerHTML += `
+                <div class="message ai">
+                    <div class="ai-name">Gemini Flash</div>
+                    ${reply}
+                </div>
+            `;
         } catch(e) {
-            document.getElementById("typing").remove();
-            chatBox.innerHTML += `<div class="message ai">Error occurred.</div>`;
+            document.getElementById(loaderId).remove();
+            chatBox.innerHTML += `
+                <div class="message ai">
+                    <div class="ai-name">Gemini Flash</div>
+                    Sorry, unable to connect to core engine. Check connection.
+                </div>
+            `;
         }
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 </script>
 
 </body>
-</html>
+                    </html>
+                    
