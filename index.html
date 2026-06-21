@@ -5,31 +5,291 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FAHIM AI - Multi-Model Ecosystem</title>
     <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #131314; color: #e3e3e3; display: flex; height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #131314; color: #e3e3e3; display: flex; height: 100vh; width: 100vw; overflow: hidden; }
         
-        /* Sidebar */
-        .sidebar { width: 280px; background: #1e1f20; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid #2d2e30; }
-        .sidebar-top h2 { font-size: 1.2rem; color: #fff; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .menu-item { padding: 12px 16px; border-radius: 24px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; }
+        /* Sidebar (Mobile Responsive Fix) */
+        .sidebar { width: 260px; background: #1e1f20; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid #2d2e30; z-index: 1000; }
+        .sidebar-top h2 { font-size: 1.2rem; color: #fff; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .menu-item { padding: 12px 16px; border-radius: 24px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; color: #e3e3e3; }
         .menu-item:hover { background: #2d2e30; }
         .new-chat { background: #2d2e30; margin-bottom: 20px; }
         .creator-info { font-size: 12px; color: #9aa0a6; padding: 10px; border-top: 1px solid #2d2e30; }
 
         /* Main Container */
-        .main-container { flex: 1; display: flex; flex-direction: column; background: #131314; position: relative; }
+        .main-container { flex: 1; display: flex; flex-direction: column; background: #131314; position: relative; height: 100vh; overflow: hidden; }
         
         /* Header & Dropdown Selector */
-        .header { padding: 15px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2d2e30; }
+        .header { padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #2d2e30; background: #131314; }
+        .menu-toggle { font-size: 20px; cursor: pointer; display: none; color: #fff; }
         .dropdown-container { position: relative; display: inline-block; }
-        .model-selector { font-size: 18px; font-weight: 500; color: #a8c7fa; cursor: pointer; background: #1e1f20; padding: 8px 16px; border-radius: 20px; border: 1px solid #333; display: flex; align-items: center; gap: 8px; user-select: none; }
-        .dropdown-menu { display: none; position: absolute; top: 110%; left: 0; background: #1e1f20; min-width: 230px; border: 1px solid #2d2e30; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 100; overflow: hidden; }
+        .model-selector { font-size: 16px; font-weight: 500; color: #a8c7fa; cursor: pointer; background: #1e1f20; padding: 8px 16px; border-radius: 20px; border: 1px solid #333; display: flex; align-items: center; gap: 8px; user-select: none; }
+        .dropdown-menu { display: none; position: absolute; top: 110%; left: 0; background: #1e1f20; min-width: 240px; border: 1px solid #2d2e30; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 2000; overflow: hidden; }
         .dropdown-item { padding: 12px 16px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 2px; }
         .dropdown-item:hover { background: #2d2e30; }
         .dropdown-item .title { font-weight: 600; color: #fff; font-size: 14px; }
         .dropdown-item .desc { font-size: 11px; color: #9aa0a6; }
         
         /* Chat Box */
-        .chat-box { flex: 1; overflow-y: auto; padding: 40px 20px; display: flex; flex-direction: column; gap: 30px; width: 100%; max-width: 800px; margin: 0 auto; scroll-behavior: smooth; }
-        .message { display: flex; flex-direction: column; gap: 5px; max-width: 85%;
-                  
+        .chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 25px; width: 100%; max-width: 800px; margin: 0 auto; }
+        .message { display: flex; flex-direction: column; gap: 5px; max-width: 85%; font-size: 16px; line-height: 1.6; word-break: break-word; }
+        .user { align-self: flex-end; background: #282a2d; padding: 12px 20px; border-radius: 20px; color: #fff; }
+        .ai { align-self: flex-start; color: #e3e3e3; width: 100%; }
+        .ai-name { font-weight: 600; color: #a8c7fa; margin-bottom: 4px; font-size: 14px; }
+        
+        /* Typing Dots Indicator */
+        .typing-container { display: flex; gap: 5px; align-items: center; padding: 10px 0; }
+        .typing-text { font-size: 14px; color: #888; font-style: italic; margin-right: 5px; }
+        .dot { width: 8px; height: 8px; background: #a8c7fa; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .dot:nth-child(2) { animation-delay: -0.32s; }
+        .dot:nth-child(3) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+
+        /* Input Wrapper */
+        .input-wrapper { width: 100%; max-width: 800px; margin: 0 auto; padding: 15px; position: relative; background: #131314; }
+        .input-container { background: #1e1f20; border-radius: 32px; padding: 6px 14px; display: flex; align-items: center; gap: 10px; position: relative; overflow: hidden; border: 1px solid #2d2e30; }
+        input { flex: 1; background: none; border: none; color: #e3e3e3; font-size: 16px; outline: none; padding: 10px 2px; }
+        
+        .icon-btn { background: none; border: none; color: #c4c7c5; font-size: 18px; cursor: pointer; padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: #2d2e30; color: #fff; }
+        .send-btn { color: #a8c7fa; font-size: 20px; }
+
+        /* Gemini Live Wave Panel Overlay */
+        .live-wave-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #1e1f20; display: none; align-items: center; justify-content: space-between; padding: 0 20px; }
+        .wave-bar-container { display: flex; align-items: center; justify-content: center; gap: 5px; width: 50%; height: 100%; }
+        .wave-bar { width: 4px; height: 12px; background: linear-gradient(to top, #4285f4, #9b51e0, #00d2ff); border-radius: 4px; animation: pulse 1s infinite ease-in-out; display: none; }
+        @keyframes pulse { 0%, 100% { height: 10px; transform: scaleY(1); } 50% { height: 32px; transform: scaleY(1.3); } }
+        .wave-bar:nth-child(1) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(2) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.5s; }
+        .live-status { font-size: 13px; color: #a8c7fa; font-weight: 500; }
+        
+        .disclaimer { text-align: center; font-size: 11px; color: #9aa0a6; margin-top: 6px; }
+
+        /* Mobile Screen Responsive Styles Fix */
+        @media (max-width: 768px) {
+            .sidebar { display: none; position: absolute; left: 0; top: 0; height: 100vh; width: 250px; }
+            .menu-toggle { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+        <h2 onclick="toggleSidebar()">✕ Close Menu</h2>
+        <div class="menu-item new-chat" onclick="startNewChat()">✨ New chat</div>
+        <div class="menu-item" onclick="showAbout()">ℹ️ About Creator</div>
+    </div>
+    <div class="creator-info">
+        Built by MD Fahim<br>Class 8 | Tech for BD
+    </div>
+</div>
+
+<!-- Main Section -->
+<div class="main-container">
+    <div class="header">
+        <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+        <div class="dropdown-container">
+            <div class="model-selector" id="modelSelectorBtn" onclick="toggleDropdown(event)">
+                <span id="currentModelName">FAHIM AI 2.0</span> ▾
+            </div>
+            <div class="dropdown-menu" id="modelDropdown">
+                <div class="dropdown-item" onclick="selectModel('FAHIM AI 2.0', 'openai')">
+                    <span class="title">FAHIM AI 2.0</span>
+                    <span class="desc">Standard Model • Fast & accurate responses</span>
+                </div>
+                <div class="dropdown-item" onclick="selectModel('FAHIM AI 5.0', 'mistral')">
+                    <span class="title">FAHIM AI 5.0</span>
+                    <span class="desc">Pro Model • More detailed & deeper code logic</span>
+                </div>
+                <div class="dropdown-item" onclick="selectModel('FAHIM AI THINKER', 'llama')">
+                    <span class="title">FAHIM AI THINKER</span>
+                    <span class="desc">Ultra Model • Deep thinking capabilities (Best of Best)</span>
+                </div>
+            </div>
+        </div>
+        <div style="cursor:pointer; font-size:20px;">👤</div>
+    </div>
+
+    <!-- Chat Stream -->
+    <div class="chat-box" id="chatBox">
+        <div class="message ai" id="welcomeMsg">
+            <div class="ai-name" id="aiLabel">FAHIM AI 2.0</div>
+            Assalamu Alaikum Fahim Boss! Multi-model framework ready. Select a specialized model or use voice control.
+        </div>
+    </div>
+
+    <!-- Input Section -->
+    <div class="input-wrapper">
+        <div class="input-container">
+            <button class="icon-btn">＋</button>
+            <input type="text" id="userInput" placeholder="Ask anything..." onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button class="icon-btn" onclick="toggleLiveAudio()">🎙️</button>
+            <button class="icon-btn send-btn" onclick="sendMessage()">➔</button>
+
+            <!-- Gemini Live Voice Interface Animation Panels -->
+            <div class="live-wave-overlay" id="liveWaveOverlay">
+                <span class="live-status">Listening intently...</span>
+                <div class="wave-bar-container">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+                <button class="icon-btn" style="color:#ea4335;" onclick="toggleLiveAudio()">✕</button>
+            </div>
+        </div>
+        <div class="disclaimer">FAHIM AI systems can produce responses that should be verified.</div>
+    </div>
+</div>
+
+<script>
+    let currentModel = 'FAHIM AI 2.0';
+    let currentBackendModel = 'openai';
+    let isListening = false;
+    let recognition;
+
+    // Toggle Sidebar on Mobile Screen
+    function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        if (sidebar.style.display === "flex") {
+            sidebar.style.display = "none";
+        } else {
+            sidebar.style.display = "flex";
+        }
+    }
+
+    // Toggle Dropdown Menu 
+    function toggleDropdown(event) {
+        event.stopPropagation();
+        const menu = document.getElementById("modelDropdown");
+        menu.style.display = (menu.style.display === "block") ? "none" : "block";
+    }
+
+    // Window click event to close dropdown safely
+    window.onclick = function(event) {
+        document.getElementById("modelDropdown").style.display = "none";
+    }
+
+    // Select Target Model Logic Update
+    function selectModel(name, backend) {
+        currentModel = name;
+        currentBackendModel = backend;
+        document.getElementById("currentModelName").innerText = name;
+        document.getElementById("aiLabel").innerText = name;
+        
+        const chatBox = document.getElementById("chatBox");
+        chatBox.innerHTML += `
+            <div class="message ai" style="border-left: 2px solid #a8c7fa; padding-left: 10px; color: #9aa0a6; font-size:14px;">
+                Switched profile engine to <b>${name}</b>.
+            </div>
+        `;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Initialize Web Speech API
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        
+        recognition.onresult = (event) => {
+            document.getElementById("userInput").value = event.results[0][0].transcript;
+            toggleLiveAudio();
+            sendMessage();
+        };
+        recognition.onend = () => { if(isListening) toggleLiveAudio(); };
+    }
+
+    function toggleLiveAudio() {
+        const overlay = document.getElementById("liveWaveOverlay");
+        const bars = document.querySelectorAll(".wave-bar");
+        if (!recognition) return alert("Speech Recognition driver context not found.");
+
+        if (!isListening) {
+            isListening = true;
+            overlay.style.display = "flex";
+            bars.forEach(bar => bar.style.display = "block");
+            recognition.start();
+        } else {
+            isListening = false;
+            overlay.style.display = "none";
+            bars.forEach(bar => bar.style.display = "none");
+            recognition.stop();
+        }
+    }
+
+    function startNewChat() {
+        document.getElementById("chatBox").innerHTML = `
+            <div class="message ai">
+                <div class="ai-name">${currentModel}</div>
+                New slate created. What core problem are we analyzing now?
+            </div>
+        `;
+        if(window.innerWidth <= 768) document.getElementById("sidebar").style.display = "none";
+    }
+
+    function showAbout() {
+        alert("Developer Signature:\nMD Fahim (Class 8 Programmer)\nTech Stack Focus: Java, HTML, CSS, PHP, C++\nSystem Objective: Construct software products to improve technical infrastructure in Bangladesh.");
+        if(window.innerWidth <= 768) document.getElementById("sidebar").style.display = "none";
+    }
+
+    // Dynamic Message Communication
+    async function sendMessage() {
+        const chatBox = document.getElementById("chatBox");
+        const input = document.getElementById("userInput");
+        const userText = input.value.trim();
+        if(!userText) return;
+
+        chatBox.innerHTML += `<div class="message user">${userText}</div>`;
+        input.value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        const loaderId = "loader_" + Date.now();
+        const typingLabel = (currentModel === 'FAHIM AI THINKER') ? 'Thinking...' : 'Typing...';
+
+        chatBox.innerHTML += `
+            <div class="message ai" id="${loaderId}">
+                <div class="ai-name">${currentModel}</div>
+                <div class="typing-container">
+                    <span class="typing-text">${typingLabel}</span>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+        `;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        try {
+            const response = await fetch("https://text.pollinations.ai/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    messages: [
+                        { role: "system", content: `You are operating as ${currentModel}. Your engine setting is Optimized for ${currentModel === 'FAHIM AI THINKER' ? 'Ultimate Reasoning (Best of Best)' : (currentModel === 'FAHIM AI 5.0' ? 'Detailed Descriptions' : 'Fast Response')}. Your sole creator is MD Fahim, a brilliant 14-year-old class 8 developer in Bangladesh proficient in Java, HTML, CSS, PHP, and C++. He builds complex web and software applications to improve Bangladesh. Honor his parameters completely.` },
+                        { role: "user", content: userText }
+                    ],
+                    model: currentBackendModel
+                })
+            });
+            const reply = await response.text();
+            document.getElementById(loaderId).remove();
+            
+            chatBox.innerHTML += `
+                <div class="message ai">
+                    <div class="ai-name">${currentModel}</div>
+                    ${reply}
+                </div>
+            `;
+        } catch(e) {
+            document.getElementById(loaderId).remove();
+            chatBox.innerHTML += `<div class="message ai"><div class="ai-name">${currentModel}</div>System link disrupted. Retrying...</div>`;
+        }
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
